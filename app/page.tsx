@@ -76,7 +76,7 @@ function App() {
   return (
     <div className="flex min-h-dvh flex-col">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:bg-paper focus:p-2">Skip to content</a>
-      <header className="no-print sticky top-0 z-30 border-b-2 border-ink bg-paper/95 backdrop-blur">
+      <header className="no-print z-30 md:sticky md:top-0 border-b-2 border-ink bg-paper/95 backdrop-blur">
         <div className="mx-auto max-w-5xl px-4 py-2 space-y-2">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <a href="?" className="font-display text-2xl font-extrabold leading-none">
@@ -87,6 +87,7 @@ function App() {
           {lat && (
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
               <Seg label="Region" value={String(cat)} options={[["1", "Cat 1"], ["2", "Cat 2"], ["3", "Cat 3"]]} onChange={(v) => set({ cat: v })} />
+              <Seg label="Units" value={unit} options={[["F", "°F"], ["C", "°C"]]} onChange={(v) => set({ unit: v })} />
               <Seg label="Data" value={src} options={[["live", "Live forecast"], ["replay", "Replay a date"]]} onChange={(v) => set({ src: v, date: v === "replay" ? date : null })} />
               {src === "replay" && (
                 <label className="flex items-center gap-1.5">
@@ -94,7 +95,6 @@ function App() {
                   <input type="date" value={date} min="1950-01-01" max={MAX_REPLAY()} onChange={(e) => e.target.value && set({ date: e.target.value })} className="rounded border-2 border-ink px-1.5 py-0.5" />
                 </label>
               )}
-              <Seg label="Units" value={unit} options={[["F", "°F"], ["C", "°C"]]} onChange={(v) => set({ unit: v })} />
             </div>
           )}
         </div>
@@ -223,7 +223,7 @@ function Search({ onPick, compact, current }: { onPick: (p: Place) => void; comp
         <label htmlFor={compact ? "city-c" : "city"} className="sr-only">City or town</label>
         <input id={compact ? "city-c" : "city"} value={text} onChange={(e) => setText(e.target.value)} autoComplete="off"
           placeholder={compact ? `Change location${current ? ` (now: ${current.split(",")[0]})` : ""}` : "Your city or town"}
-          className={`min-w-0 flex-1 rounded border-2 border-ink px-3 ${big ? "py-3 text-lg" : "py-1"}`} />
+          className={`min-w-0 flex-1 rounded border-2 border-ink px-3 ${big ? "py-3 text-lg" : "py-1 basis-full sm:basis-auto"}`} />
         <button type="submit" disabled={busy} className={`rounded bg-ink font-semibold text-white disabled:opacity-60 ${big ? "px-5 py-3 text-lg" : "px-3 py-1"}`}>Search</button>
         <button type="button" onClick={locate} disabled={busy} className={`rounded border-2 border-ink font-semibold ${big ? "px-4 py-3" : "px-2 py-0.5 text-sm"}`}>Use my location</button>
       </form>
@@ -292,7 +292,8 @@ function Plan(p: {
 }) {
   const [sel, setSel] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const cur = p.plans.find((x) => x.day === sel) ?? p.plans.find((x) => x.scheduled.flag && x.best && x.scheduled.flag !== x.best.flag) ?? p.plans[0];
+  const worst = p.plans.reduce<DayPlan | undefined>((a, x) => (!a || (x.scheduled.wbgtF ?? -1) > (a.scheduled.wbgtF ?? -1) ? x : a), undefined);
+  const cur = p.plans.find((x) => x.day === sel) ?? worst;
   const startOpts = Array.from({ length: 35 }, (_, i) => toHHMM(300 + i * 30)); // 5:00–22:00
   const durOpts = [30, 45, 60, 75, 90, 105, 120, 150, 180];
   const toggleDay = (d: number) => {

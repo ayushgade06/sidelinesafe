@@ -34,7 +34,7 @@ export async function POST(req: Request) {
 
   const prompt =
     `Write a warm, plain message (≤ 70 words) to parents in ${language}. Use ONLY these facts; copy every time and number exactly ` +
-    `(keep clock times in the same digits and format, e.g. "6:00 AM"); do not add medical advice. Output only the message. Facts: ${JSON.stringify(facts)}`;
+    `(keep clock times in the same digits and format, e.g. "6:00 AM"); do not add medical advice. Say plainly that the change is for heat safety. Output only the message. Facts: ${JSON.stringify(facts)}`;
 
   // An OpenRouter key (sk-or-…) reaches the same model through OpenRouter's Anthropic-compatible Messages endpoint.
   const viaOR = key.startsWith("sk-or-");
