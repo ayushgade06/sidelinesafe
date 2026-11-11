@@ -136,7 +136,7 @@ function App() {
                   days={days} start={start} dur={dur} from={from} to={to} set={set}
                 />
               ) : (
-                <Now wx={wx} cat={cat} unit={unit} src={src} date={date} at={q("at", "09:00")} set={set} />
+                <Now place={name} wx={wx} cat={cat} unit={unit} src={src} date={date} at={q("at", "09:00")} set={set} />
               )}
             </section>
           </>
@@ -517,7 +517,7 @@ function FamilyMessage({ facts }: { facts: Facts }) {
 }
 
 // ---------- Now tab ----------
-function Now({ wx, cat, unit, src, date, at, set }: { wx: Wx; cat: Cat; unit: Unit; src: string; date: string; at: string; set: (x: Record<string, string | null>) => void }) {
+function Now({ place, wx, cat, unit, src, date, at, set }: { place: string; wx: Wx; cat: Cat; unit: Unit; src: string; date: string; at: string; set: (x: Record<string, string | null>) => void }) {
   const [meter, setMeter] = useState("");
   const nowKey = src === "replay" ? `${date}T${at.slice(0, 2)}:00` : `${wx.nowLocal.slice(0, 13)}:00`;
   const idx = wx.hours.findIndex((h) => h.time === nowKey);
@@ -560,7 +560,7 @@ function Now({ wx, cat, unit, src, date, at, set }: { wx: Wx; cat: Cat; unit: Un
             <p className="mt-1 border-l-4 border-ink pl-3">{g.action}</p>
           </div>
           <div>
-            <h2 className="font-display text-2xl font-extrabold">Next change</h2>
+            <h2 className="font-display text-2xl font-extrabold">Next change{meterF != null && " (from the estimate)"}</h2>
             {nh && nf ? (
               <p className="mt-1 flex flex-wrap items-center gap-2">
                 Turns <FlagBadge flag={nf} /> at <strong className="tabular">{fmt12(nh.time.slice(11))}</strong>
@@ -581,6 +581,7 @@ function Now({ wx, cat, unit, src, date, at, set }: { wx: Wx; cat: Cat; unit: Un
           </div>
         </div>
       </div>
+      <HeatLog entry={{ logged: new Date().toISOString(), place, readingFor: h.time, source: meterF == null ? "estimate" : "meter", wbgtF: w, flag: g.label, cat }} />
       <section aria-labelledby="n24">
         <h2 id="n24" className="font-display text-2xl font-extrabold">Next 24 hours</h2>
         <Chart hours={next24} cat={cat} unit={unit} label="Estimated WBGT for the next 24 hours" />
@@ -651,5 +652,40 @@ function Footer() {
         </p>
       </div>
     </footer>
+  );
+}
+
+// ---------- P1: heat log (localStorage only, export CSV) ----------
+type LogRow = { logged: string; place: string; readingFor: string; source: string; wbgtF: number; flag: string; cat: number };
+function HeatLog({ entry }: { entry: LogRow }) {
+  const [rows, setRows] = useState<LogRow[]>(() => {
+    try { return JSON.parse(localStorage.getItem("ss-heat-log") || "[]"); } catch { return []; }
+  });
+  const save = (r: LogRow[]) => { setRows(r); try { localStorage.setItem("ss-heat-log", JSON.stringify(r)); } catch {} };
+  const csv = () => {
+    const head = "logged_at,place,reading_for,source,wbgt_f,flag,region_cat";
+    const body = rows.map((r) => [r.logged, r.place, r.readingFor, r.source, r.wbgtF.toFixed(1), r.flag, r.cat].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","));
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([[head, ...body].join("\n")], { type: "text/csv" }));
+    a.download = "sidelinesafe-heat-log.csv";
+    a.click();
+  };
+  return (
+    <section aria-labelledby="log-h" className="rounded-lg border-2 border-line p-4">
+      <h2 id="log-h" className="font-display text-2xl font-extrabold">Heat log</h2>
+      <p className="text-sm text-muted">Many state policies require logging WBGT readings. Entries stay on this device.</p>
+      <div className="mt-2 flex flex-wrap gap-2">
+        <button type="button" onClick={() => save([entry, ...rows])} className="rounded bg-ink px-4 py-2 font-semibold text-white">Log this reading</button>
+        {rows.length > 0 && <button type="button" onClick={csv} className="rounded border-2 border-ink px-4 py-2 font-semibold">Download CSV ({rows.length})</button>}
+        {rows.length > 0 && <button type="button" onClick={() => save([])} className="rounded border-2 border-ink px-4 py-2 font-semibold">Clear log</button>}
+      </div>
+      {rows.length > 0 && (
+        <ul className="mt-2 space-y-1 text-sm tabular">
+          {rows.slice(0, 5).map((r) => (
+            <li key={r.logged}>{new Date(r.logged).toLocaleString()}: {r.place}, {r.readingFor.replace("T", " ")}, {r.wbgtF.toFixed(1)}°F {r.flag} ({r.source})</li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }

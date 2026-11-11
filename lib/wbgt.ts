@@ -119,6 +119,9 @@ export function planDay(hours: Hour[], day: string, startPref: string, durMin: n
     }
   }
   if (!best) return { day, scheduled, best, cappedDurMin: 0, breaks: [] };
+  // Don't move a practice that's already in the safest flag category (a cooler hour in the same flag changes no guidance).
+  const inHours = pref >= fromH * 60 && pref + durMin <= toH * 60;
+  if (inHours && sw != null && scheduled.flag && sev(scheduled.flag) <= sev(best.flag)) best = { start: startPref, wbgtF: sw, flag: scheduled.flag };
   const max = GUIDE[best.flag].maxMin;
   const cappedDurMin = max == null ? durMin : Math.min(durMin, max);
   return { day, scheduled, best, cappedDurMin, breaks: breakTimes(best.start, cappedDurMin, best.flag) };

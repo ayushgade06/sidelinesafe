@@ -37,6 +37,7 @@ const redOnly = hours.map((h) => ({ ...h, wbgtF: 91 }));
 const q = planDay(redOnly, day, "16:00", 120, 6, 20, 3);
 assert.equal(q.best?.flag, "red"); assert.equal(q.cappedDurMin, 60); assert.equal(q.best?.start, "16:00", "tie → closest to pref");
 assert.equal(planDay(hours.map((h) => ({ ...h, wbgtF: 95 })), day, "16:00", 120, 6, 20, 3).cappedDurMin, 0, "black cancels");
+assert.equal(planDay(hours.map((h) => ({ ...h, wbgtF: h.wbgtF! - 12 })), day, "16:00", 120, 6, 20, 3).best?.start, "16:00", "already green → keep time");
 
 // 5. Break times.
 assert.deepEqual(breakTimes("06:00", 60, "yellow"), ["06:20", "06:40"]);
