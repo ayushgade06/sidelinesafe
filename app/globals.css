@@ -1,26 +1,47 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-paper: #ffffff;
+  --color-chalk: #eef1f4;
+  --color-line: #c3ccd6;
+  --color-ink: #0c1e33;
+  --color-muted: #475769;
+  --color-signal: #0a54c9;
+  --color-fgreen: #1b7f3b;
+  --color-fyellow: #ffd23f;
+  --color-forange: #ff8c1a;
+  --color-fred: #c21a2b;
+  --color-fblack: #000000;
+  --font-display: var(--font-barlow);
+  --font-sans: var(--font-public);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+html { color-scheme: light; }
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-public), system-ui, sans-serif;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-signal);
+  outline-offset: 2px;
+}
+
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* The Now-tab flag: a pennant, the one loud element on the page. */
+.pennant { clip-path: polygon(0 0, 100% 0, 88% 50%, 100% 100%, 0 100%); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .rise { animation: rise 420ms cubic-bezier(.2,.7,.2,1) both; }
+  @keyframes rise { from { transform: translateY(8px); opacity: 0; } }
+}
+
+@media print {
+  body * { visibility: hidden; }
+  .print-area, .print-area * { visibility: visible; }
+  .print-area { position: absolute; inset: 0 auto auto 0; width: 100%; border: 0 !important; }
+  .no-print { display: none !important; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
